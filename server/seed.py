@@ -97,5 +97,5 @@ def seed_all():
     applications = seed_applications(users, employments)
     social_integrations = seed_social_integrations(users, categories)
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     seed_all()

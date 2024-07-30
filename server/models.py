@@ -20,3 +20,33 @@ class User(db.Model):
     applications = db.relationship('Application', back_populates='user', lazy=True)
     categories = db.relationship('Category', back_populates='creator', lazy=True)
     social_integrations = db.relationship('SocialIntegration', back_populates='user', lazy=True)
+
+    class Employment(db.Model):
+        _tablename_ = 'employment'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+    title = db.Column(db.String, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    requirements = db.Column(db.Text)
+    location = db.Column(db.String)
+    salary_range = db.Column(db.Integer)
+
+    # Relationships
+    user = db.relationship('User', back_populates='employments')  # Corrected relationship
+    category = db.relationship('Category', back_populates='employments', lazy=True)
+    applications = db.relationship('Application', back_populates='employment', lazy=True)
+
+class Category(db.Model):
+    _tablename_ = 'category'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    description = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    # Relationships
+    employments = db.relationship('Employment', back_populates='category', lazy=True)
+    social_integrations = db.relationship('SocialIntegration', back_populates='category', lazy=True)
+    creator = db.relationship('User', back_populates='categories', lazy=True)

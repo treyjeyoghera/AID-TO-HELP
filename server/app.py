@@ -35,3 +35,17 @@ def create_user():
     db.session.add(new_user)
     db.session.commit()
     return jsonify({'message': 'User created successfully!', 'user_id': new_user.id}), 201
+
+@app.route('/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        return jsonify({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'profile_picture': user.profile_picture
+        }), 200
+    return jsonify({'message': 'User not found!'}), 404

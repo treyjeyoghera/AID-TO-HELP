@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 db = SQLAlchemy()
 
 class User(db.Model):
-    _tablename_ = 'user'
+    __tablename__ = 'user'
     
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable=False)
@@ -21,8 +21,8 @@ class User(db.Model):
     categories = db.relationship('Category', back_populates='creator', lazy=True)
     social_integrations = db.relationship('SocialIntegration', back_populates='user', lazy=True)
 
-    class Employment(db.Model):
-        _tablename_ = 'employment'
+class Employment(db.Model):
+    __tablename__ = 'employment'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -39,7 +39,7 @@ class User(db.Model):
     applications = db.relationship('Application', back_populates='employment', lazy=True)
 
 class Category(db.Model):
-    _tablename_ = 'category'
+    __tablename__ = 'category'
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -50,9 +50,9 @@ class Category(db.Model):
     employments = db.relationship('Employment', back_populates='category', lazy=True)
     social_integrations = db.relationship('SocialIntegration', back_populates='category', lazy=True)
     creator = db.relationship('User', back_populates='categories', lazy=True)
-    
+
 class Application(db.Model):
-    _tablename_ = 'application'
+    __tablename__ = 'application'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -64,7 +64,7 @@ class Application(db.Model):
     employment = db.relationship('Employment', back_populates='applications', lazy=True)
 
 class SocialIntegration(db.Model):
-    _tablename_ = 'socialintegration'
+    __tablename__ = 'socialintegration'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

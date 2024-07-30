@@ -50,3 +50,26 @@ class Category(db.Model):
     employments = db.relationship('Employment', back_populates='category', lazy=True)
     social_integrations = db.relationship('SocialIntegration', back_populates='category', lazy=True)
     creator = db.relationship('User', back_populates='categories', lazy=True)
+    
+class Application(db.Model):
+    _tablename_ = 'application'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    employment_id = db.Column(db.Integer, db.ForeignKey('employment.id'), nullable=False)
+    status = db.Column(db.Integer, nullable=False)  # You can define constants for status
+
+    # Relationships
+    user = db.relationship('User', back_populates='applications', lazy=True)
+    employment = db.relationship('Employment', back_populates='applications', lazy=True)
+
+class SocialIntegration(db.Model):
+    _tablename_ = 'socialintegration'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+
+    # Relationships
+    user = db.relationship('User', back_populates='social_integrations', lazy=True)
+    category = db.relationship('Category', back_populates='social_integrations', lazy=True)

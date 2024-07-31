@@ -117,6 +117,47 @@ def get_categories():
             'description': category.description,
         } for category in categories
     ]), 200
+#havent tested these so idk
+@app.route('/categories', methods=['POST'])
+def create_category():
+    data = request.get_json()
+    if not data or not all(key in data for key in ['name']):
+        return jsonify({'message': 'Missing required fields!'}), 400
+
+    new_category = Category(
+        name=data['name'],
+        description=data.get('description'),
+        user_id=data.get('user_id')
+    )
+    db.session.add(new_category)
+    db.session.commit()
+    return jsonify({'message': 'Category created successfully!', 'category_id': new_category.id}), 201
+@app.route('/categories/<int:id>', methods=['PUT'])
+def update_category(id):
+    category = Category.query.get(id)
+    if not category:
+        return jsonify({'message': 'Category not found!'}), 404
+
+    data = request.get_json()
+    if 'name' in data:
+        category.name = data['name']
+    if 'description' in data:
+        category.description = data['description']
+    if 'user_id' in data:
+        category.user_id = data['user_id']
+
+    db.session.commit()
+    return jsonify({'message': 'Category updated successfully!'}), 200
+@app.route('/categories/<int:id>', methods=['DELETE'])
+def delete_category(id):
+    category = Category.query.get(id)
+    if category:
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({'message': 'Category deleted successfully!'}), 200
+    return jsonify({'message': 'Category not found!'}), 404
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

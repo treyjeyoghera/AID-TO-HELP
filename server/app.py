@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from models import db, User, Category  # Ensure Category is imported if not already
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
+from models import db, User, Employment, Category, Application, SocialIntegration
 
 def create_app():
     app = Flask(__name__)
@@ -117,7 +118,7 @@ def get_categories():
             'description': category.description,
         } for category in categories
     ]), 200
-#havent tested these so idk
+
 @app.route('/categories', methods=['POST'])
 def create_category():
     data = request.get_json()
@@ -132,6 +133,7 @@ def create_category():
     db.session.add(new_category)
     db.session.commit()
     return jsonify({'message': 'Category created successfully!', 'category_id': new_category.id}), 201
+
 @app.route('/categories/<int:id>', methods=['PUT'])
 def update_category(id):
     category = Category.query.get(id)
@@ -143,11 +145,10 @@ def update_category(id):
         category.name = data['name']
     if 'description' in data:
         category.description = data['description']
-    if 'user_id' in data:
-        category.user_id = data['user_id']
 
     db.session.commit()
     return jsonify({'message': 'Category updated successfully!'}), 200
+
 @app.route('/categories/<int:id>', methods=['DELETE'])
 def delete_category(id):
     category = Category.query.get(id)
@@ -157,7 +158,78 @@ def delete_category(id):
         return jsonify({'message': 'Category deleted successfully!'}), 200
     return jsonify({'message': 'Category not found!'}), 404
 
+@app.route('/employments', methods=['POST'])
+def create_employment():
+    data = request.get_json()
+    if not data or not all(key in data for key in ['user_id', 'category_id', 'title', 'description']):
+        return jsonify({'message': 'Missing required fields!'}), 400
 
+    employment = Employment.create(
+        user_id=data['user_id'],
+        category_id=data['category_id'],
+        title=data['title'],
+        description=data['description'],
+        requirements=data.get('requirements'),
+        location=data.get('location'),
+        salary_range=data.get('salary_range')
+    )
+    return jsonify({'message': 'Employment created successfully!', 'employment_id': employment.id}), 201
+
+@app.route('/employments', methods=['GET'])
+def get_employments():
+    employments = Employment.get_all()
+    return jsonify([
+        {
+            'id': employment.id,
+            'user_id': employment.user_id,
+            'category_id': employment.category_id,
+            'title': employment.title,
+            'description': employment.description,
+            'requirements': employment.requirements,
+            'location': employment.location,
+            'salary_range': employment.salary_range
+        } for employment in employments
+    ]), 200
+
+@app.route('/employments/<int:id>', methods=['GET'])
+def get_employment(id):
+    employment = Employment.get_by_id(id)
+    if employment:
+        return jsonify({
+            'id': employment.id,
+            'user_id': employment.user_id,
+            'category_id': employment.category_id,
+            'title': employment.title,
+            'description': employment.description,
+            'requirements': employment.requirements,
+            'location': employment.location,
+            'salary_range': employment.salary_range
+        }), 200
+    return jsonify({'message': 'Employment not found!'}), 404
+
+@app.route('/employments/<int:id>', methods=['PUT'])
+def update_employment(id):
+    employment = Employment.get_by_id(id)
+    if not employment:
+        return jsonify({'message': 'Employment not found!'}), 404
+
+    data = request.get_json()
+    employment.update(
+        title=data.get('title'),
+        description=data.get('description'),
+        requirements=data.get('requirements'),
+        location=data.get('location'),
+        salary_range=data.get('salary_range')
+    )
+    return jsonify({'message': 'Employment updated successfully!'}), 200
+
+@app.route('/employments/<int:id>', methods=['DELETE'])
+def delete_employment(id):
+    employment = Employment.get_by_id(id)
+    if employment:
+        employment.delete()
+        return jsonify({'message': 'Employment deleted successfully!'}), 200
+    return jsonify({'message': 'Employment not found!'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

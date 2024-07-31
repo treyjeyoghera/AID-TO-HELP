@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
 db = SQLAlchemy()
@@ -34,9 +34,41 @@ class Employment(db.Model):
     salary_range = db.Column(db.Integer)
 
     # Relationships
-    user = db.relationship('User', back_populates='employments')  # Corrected relationship
+    user = db.relationship('User', back_populates='employments')
     category = db.relationship('Category', back_populates='employments', lazy=True)
     applications = db.relationship('Application', back_populates='employment', lazy=True)
+
+    @staticmethod
+    def create(user_id, category_id, title, description, requirements=None, location=None, salary_range=None):
+        employment = Employment(
+            user_id=user_id,
+            category_id=category_id,
+            title=title,
+            description=description,
+            requirements=requirements,
+            location=location,
+            salary_range=salary_range
+        )
+        db.session.add(employment)
+        db.session.commit()
+        return employment
+
+    @staticmethod
+    def get_all():
+        return Employment.query.all()
+
+    @staticmethod
+    def get_by_id(id):
+        return Employment.query.get(id)
+
+    def update(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
 
 class Category(db.Model):
     __tablename__ = 'category'
@@ -57,7 +89,7 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     employment_id = db.Column(db.Integer, db.ForeignKey('employment.id'), nullable=False)
-    status = db.Column(db.Integer, nullable=False)  # You can define constants for status
+    status = db.Column(db.Integer, nullable=False)  # Define constants for status
 
     # Relationships
     user = db.relationship('User', back_populates='applications', lazy=True)

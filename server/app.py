@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
-from models import db, User
+from models import db, User, Category  # Ensure Category is imported if not already
 from werkzeug.security import generate_password_hash, check_password_hash
 
 def create_app():
-    app = Flask(_name_)
+    app = Flask(__name__)
 
     # Configure your database URI here
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///poverty.db'
@@ -35,6 +35,20 @@ def create_user():
     db.session.add(new_user)
     db.session.commit()
     return jsonify({'message': 'User created successfully!', 'user_id': new_user.id}), 201
+
+@app.route('/users', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    return jsonify([
+        {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'profile_picture': user.profile_picture
+        } for user in users
+    ]), 200
 
 @app.route('/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
@@ -82,5 +96,27 @@ def delete_user(user_id):
         return jsonify({'message': 'User deleted successfully!'}), 200
     return jsonify({'message': 'User not found!'}), 404
 
-if _name_ == '_main_':
+@app.route('/categories/<int:id>', methods=['GET'])
+def get_category(id):
+    category = Category.query.get(id)
+    if category:
+        return jsonify({
+            'id': category.id,
+            'name': category.name,
+            'description': category.description,
+        }), 200
+    return jsonify({'message': 'Category not found'}), 404
+
+@app.route('/categories', methods=['GET'])
+def get_categories():
+    categories = Category.query.all()
+    return jsonify([
+        {
+            'id': category.id,
+            'name': category.name,
+            'description': category.description,
+        } for category in categories
+    ]), 200
+
+if __name__ == '__main__':
     app.run(debug=True)

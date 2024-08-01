@@ -258,5 +258,15 @@ def get_application(application_id):
         }), 200
     return jsonify({ 'message': 'Application not found!'}), 404
 
+@app.route('/applications/<int:application_id>', methods=["DELETE"])
+def delete_application(application_id):
+    application = Application.query.get(application_id)
+    if application:
+        db.session.delete(application)
+        db.session.commit()
+        return jsonify({ 'message': 'APplication deleted successfully!'}), 200
+    return jsonify({ 'message': 'Application not found'}), 404
+
+
 if __name__ == '__main__':
     app.run(debug=True)

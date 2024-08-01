@@ -89,7 +89,7 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     employment_id = db.Column(db.Integer, db.ForeignKey('employment.id'), nullable=False)
-    status = db.Column(db.Integer, nullable=False)  # Define constants for status
+    status = db.Column(db.String, nullable=False)  # Define constants for status
 
     # Relationships
     user = db.relationship('User', back_populates='applications', lazy=True)

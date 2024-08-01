@@ -231,5 +231,20 @@ def delete_employment(id):
         return jsonify({'message': 'Employment deleted successfully!'}), 200
     return jsonify({'message': 'Employment not found!'}), 404
 
+@app.route('/applications', methods=['POST'])
+def create_application():
+    data=request.get_json()
+    if not data or not all(key in data for key in ['user_id', 'employment_id', 'status']):
+        return jsonify({'message': 'Missing required fields!'}), 400
+    
+    new_application = Application(
+        user_id = data['user_id'],
+        employment_id = data['employment_id'],
+        status = data['status']
+    )
+    db.session.add(new_application)
+    db.session.commit()
+    return jsonify({'Message': 'Application created successfully!', 'applicaion_id': new_application.id}), 201
+
 if __name__ == '__main__':
     app.run(debug=True)

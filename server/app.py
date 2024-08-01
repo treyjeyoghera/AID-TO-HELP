@@ -258,6 +258,18 @@ def get_application(application_id):
         }), 200
     return jsonify({ 'message': 'Application not found!'}), 404
 
+@app.route('/applications', methods=["GET"])
+def get_all_applications():
+    applications = Application.query.all()
+    return jsonify([
+        {
+        'id':app.id,
+        'user_id':app.user_id,
+        'employment_id':app.employment_id,
+        'status':app.status
+        } for app in applications
+    ]), 200
+
 @app.route('/applications/<int:application_id>', methods=["DELETE"])
 def delete_application(application_id):
     application = Application.query.get(application_id)

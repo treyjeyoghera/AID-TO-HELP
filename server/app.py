@@ -246,5 +246,17 @@ def create_application():
     db.session.commit()
     return jsonify({'Message': 'Application created successfully!', 'applicaion_id': new_application.id}), 201
 
+@app.route('/applications/<int:application_id>', methods=['GET'])
+def get_application(application_id):
+    application = Application.query.get(application_id)
+    if application:
+        return jsonify({
+            'id':application.id,
+            'user_id':application.user_id,
+            'employment_id':application.employment_id,
+            'status':application.status
+        }), 200
+    return jsonify({ 'message': 'Application not found!'}), 404
+
 if __name__ == '__main__':
     app.run(debug=True)

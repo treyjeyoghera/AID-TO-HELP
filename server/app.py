@@ -270,6 +270,25 @@ def get_all_applications():
         } for app in applications
     ]), 200
 
+@app.route('/applications/<int:application_id>', methods=['PUT'])
+def update_application(application_id):
+    application = Application.query.get(application_id)
+    if not application:
+        return jsonify({
+            'message' : 'Application not found'
+        }), 404
+    
+    data = request.get_json()
+    if 'user_id' in data:
+        application.user_id = data['user_id']
+    if 'employment_id' in data:
+        application.employment_id = data['employment_id']
+    if 'status' in data:
+        application.status = data['status']
+
+    db.session.commit()
+    return jsonify({ 'message': 'Application updated successfully'}), 200
+
 @app.route('/applications/<int:application_id>', methods=["DELETE"])
 def delete_application(application_id):
     application = Application.query.get(application_id)

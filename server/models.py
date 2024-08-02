@@ -24,15 +24,15 @@ class User(db.Model, UserMixin):  # Inherit from UserMixin
 
     @property
     def is_active(self):
-        return True  # All users are considered active
+        return True  
 
     @property
     def is_authenticated(self):
-        return True  # This will always return true since we are using Flask-Login
+        return True  
 
     @property
     def is_anonymous(self):
-        return False  # This will always return false since we are using Flask-Login
+        return False  
 
 class Employment(db.Model):
     __tablename__ = 'employment'

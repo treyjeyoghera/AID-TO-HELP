@@ -13,13 +13,21 @@ class LoginResource(Resource):
             password = data.get('password')
             
             user = User.query.filter_by(email=email).first()
+            print(f"Attempting to log in user: {email}")  
 
-            if not user or not check_password_hash(user.password, password):
+            if not user:
+                print("User not found")  #  
+                return {'message': 'Invalid email or password'}, 401
+            
+            if not check_password_hash(user.password, password):
+                print("Password does not match")  #  
                 return {'message': 'Invalid email or password'}, 401
             
             login_user(user)
+            print("User logged in successfully")  #  
             return {'message': 'Logged in successfully'}, 200
         except Exception as e:
+            print(f"Exception occurred: {str(e)}")  #  
             return {'message': str(e)}, 500
 
 class SignupResource(Resource):

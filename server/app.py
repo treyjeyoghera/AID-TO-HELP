@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_restful import Api
 from flask_login import LoginManager
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employment, Category, Application, SocialIntegration
 from auth import initialize_auth_routes
 
@@ -13,6 +13,7 @@ def create_app():
     # Configure your database URI here
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///poverty.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.secret_key = 'go high'  # Set your secret key
 
     # Initialize the database and Flask-Migrate
     db.init_app(app)
@@ -180,7 +181,7 @@ def create_employment():
     if not data or not all(key in data for key in ['user_id', 'category_id', 'title', 'description']):
         return jsonify({'message': 'Missing required fields!'}), 400
 
-    employment = Employment.create(
+    employment = Employment(
         user_id=data['user_id'],
         category_id=data['category_id'],
         title=data['title'],
@@ -189,11 +190,13 @@ def create_employment():
         location=data.get('location'),
         salary_range=data.get('salary_range')
     )
+    db.session.add(employment)
+    db.session.commit()
     return jsonify({'message': 'Employment created successfully!', 'employment_id': employment.id}), 201
 
 @app.route('/employments', methods=['GET'])
 def get_employments():
-    employments = Employment.get_all()
+    employments = Employment.query.all()
     return jsonify([
         {
             'id': employment.id,
@@ -209,7 +212,7 @@ def get_employments():
 
 @app.route('/employments/<int:id>', methods=['GET'])
 def get_employment(id):
-    employment = Employment.get_by_id(id)
+    employment = Employment.query.get(id)
     if employment:
         return jsonify({
             'id': employment.id,
@@ -225,25 +228,31 @@ def get_employment(id):
 
 @app.route('/employments/<int:id>', methods=['PUT'])
 def update_employment(id):
-    employment = Employment.get_by_id(id)
+    employment = Employment.query.get(id)
     if not employment:
         return jsonify({'message': 'Employment not found!'}), 404
 
     data = request.get_json()
-    employment.update(
-        title=data.get('title'),
-        description=data.get('description'),
-        requirements=data.get('requirements'),
-        location=data.get('location'),
-        salary_range=data.get('salary_range')
-    )
+    if 'title' in data:
+        employment.title = data['title']
+    if 'description' in data:
+        employment.description = data['description']
+    if 'requirements' in data:
+        employment.requirements = data['requirements']
+    if 'location' in data:
+        employment.location = data['location']
+    if 'salary_range' in data:
+        employment.salary_range = data['salary_range']
+
+    db.session.commit()
     return jsonify({'message': 'Employment updated successfully!'}), 200
 
 @app.route('/employments/<int:id>', methods=['DELETE'])
 def delete_employment(id):
-    employment = Employment.get_by_id(id)
+    employment = Employment.query.get(id)
     if employment:
-        employment.delete()
+        db.session.delete(employment)
+        db.session.commit()
         return jsonify({'message': 'Employment deleted successfully!'}), 200
     return jsonify({'message': 'Employment not found!'}), 404
 
@@ -255,35 +264,35 @@ def create_application():
         return jsonify({'message': 'Missing required fields!'}), 400
     
     new_application = Application(
-        user_id = data['user_id'],
-        employment_id = data['employment_id'],
-        status = data['status']
+        user_id=data['user_id'],
+        employment_id=data['employment_id'],
+        status=data['status']
     )
     db.session.add(new_application)
     db.session.commit()
-    return jsonify({'Message': 'Application created successfully!', 'application_id': new_application.id}), 201
+    return jsonify({'message': 'Application created successfully!', 'application_id': new_application.id}), 201
 
 @app.route('/applications/<int:application_id>', methods=['GET'])
 def get_application(application_id):
     application = Application.query.get(application_id)
     if application:
         return jsonify({
-            'id':application.id,
-            'user_id':application.user_id,
-            'employment_id':application.employment_id,
-            'status':application.status
+            'id': application.id,
+            'user_id': application.user_id,
+            'employment_id': application.employment_id,
+            'status': application.status
         }), 200
-    return jsonify({ 'message': 'Application not found!'}), 404
+    return jsonify({'message': 'Application not found!'}), 404
 
-@app.route('/applications', methods=["GET"])
+@app.route('/applications', methods=['GET'])
 def get_all_applications():
     applications = Application.query.all()
     return jsonify([
         {
-        'id':app.id,
-        'user_id':app.user_id,
-        'employment_id':app.employment_id,
-        'status':app.status
+            'id': app.id,
+            'user_id': app.user_id,
+            'employment_id': app.employment_id,
+            'status': app.status
         } for app in applications
     ]), 200
 
@@ -291,9 +300,7 @@ def get_all_applications():
 def update_application(application_id):
     application = Application.query.get(application_id)
     if not application:
-        return jsonify({
-            'message' : 'Application not found'
-        }), 404
+        return jsonify({'message': 'Application not found!'}), 404
     
     data = request.get_json()
     if 'user_id' in data:
@@ -304,16 +311,16 @@ def update_application(application_id):
         application.status = data['status']
 
     db.session.commit()
-    return jsonify({ 'message': 'Application updated successfully'}), 200
+    return jsonify({'message': 'Application updated successfully!'}), 200
 
-@app.route('/applications/<int:application_id>', methods=["DELETE"])
+@app.route('/applications/<int:application_id>', methods=['DELETE'])
 def delete_application(application_id):
     application = Application.query.get(application_id)
     if application:
         db.session.delete(application)
         db.session.commit()
-        return jsonify({ 'message': 'Application deleted successfully!'}), 200
-    return jsonify({ 'message': 'Application not found'}), 404
+        return jsonify({'message': 'Application deleted successfully!'}), 200
+    return jsonify({'message': 'Application not found!'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

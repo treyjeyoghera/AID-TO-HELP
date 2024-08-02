@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_restful import Api
+from flask_login import LoginManager
 from werkzeug.security import generate_password_hash
 from models import db, User, Employment, Category, Application, SocialIntegration
+from auth import initialize_auth_routes
 
 def create_app():
     app = Flask(__name__)
@@ -14,11 +17,22 @@ def create_app():
     # Initialize the database and Flask-Migrate
     db.init_app(app)
     migrate = Migrate(app, db)
+    
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    api = Api(app)
+    initialize_auth_routes(api)  # Initialize authentication routes
 
     return app
 
 app = create_app()
 
+# User routes
 @app.route('/users', methods=['POST'])
 def create_user():
     data = request.get_json()
@@ -97,6 +111,7 @@ def delete_user(user_id):
         return jsonify({'message': 'User deleted successfully!'}), 200
     return jsonify({'message': 'User not found!'}), 404
 
+# Category routes
 @app.route('/categories/<int:id>', methods=['GET'])
 def get_category(id):
     category = Category.query.get(id)
@@ -158,6 +173,7 @@ def delete_category(id):
         return jsonify({'message': 'Category deleted successfully!'}), 200
     return jsonify({'message': 'Category not found!'}), 404
 
+# Employment routes
 @app.route('/employments', methods=['POST'])
 def create_employment():
     data = request.get_json()
@@ -231,9 +247,10 @@ def delete_employment(id):
         return jsonify({'message': 'Employment deleted successfully!'}), 200
     return jsonify({'message': 'Employment not found!'}), 404
 
+# Application routes
 @app.route('/applications', methods=['POST'])
 def create_application():
-    data=request.get_json()
+    data = request.get_json()
     if not data or not all(key in data for key in ['user_id', 'employment_id', 'status']):
         return jsonify({'message': 'Missing required fields!'}), 400
     
@@ -244,7 +261,7 @@ def create_application():
     )
     db.session.add(new_application)
     db.session.commit()
-    return jsonify({'Message': 'Application created successfully!', 'applicaion_id': new_application.id}), 201
+    return jsonify({'Message': 'Application created successfully!', 'application_id': new_application.id}), 201
 
 @app.route('/applications/<int:application_id>', methods=['GET'])
 def get_application(application_id):
@@ -295,9 +312,8 @@ def delete_application(application_id):
     if application:
         db.session.delete(application)
         db.session.commit()
-        return jsonify({ 'message': 'APplication deleted successfully!'}), 200
+        return jsonify({ 'message': 'Application deleted successfully!'}), 200
     return jsonify({ 'message': 'Application not found'}), 404
-
 
 if __name__ == '__main__':
     app.run(debug=True)

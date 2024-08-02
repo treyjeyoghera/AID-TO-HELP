@@ -2,8 +2,9 @@ from flask import request, jsonify
 from flask_restful import Resource, reqparse
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from .models import User
-from . import db
+from models import db
+from models import User
+
 
 class LoginResource(Resource):
     def post(self):

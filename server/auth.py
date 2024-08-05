@@ -13,21 +13,24 @@ class LoginResource(Resource):
             password = data.get('password')
             
             user = User.query.filter_by(email=email).first()
-            print(f"Attempting to log in user: {email}")  
+            print(f"Attempting to log in user: {email}")
 
             if not user:
-                print("User not found")  #  
+                print("User not found")
                 return {'message': 'Invalid email or password'}, 401
             
             if not check_password_hash(user.password, password):
-                print("Password does not match")  #  
+                print("Password does not match")
                 return {'message': 'Invalid email or password'}, 401
             
             login_user(user)
-            print("User logged in successfully")  #  
-            return {'message': 'Logged in successfully'}, 200
+            print("User logged in successfully")
+            return {
+                'message': 'Logged in successfully',
+                'profile_picture': user.profile_picture  # Include profile picture if exists
+            }, 200
         except Exception as e:
-            print(f"Exception occurred: {str(e)}")  #  
+            print(f"Exception occurred: {str(e)}")
             return {'message': str(e)}, 500
 
 class SignupResource(Resource):
@@ -39,6 +42,7 @@ class SignupResource(Resource):
             password = data.get('password')
             first_name = data.get('first_name')
             last_name = data.get('last_name')
+            profile_picture = data.get('profile_picture')  # Get the optional profile_picture
 
             if not email or not username or not password:
                 return {'message': 'Missing required fields'}, 400
@@ -53,7 +57,8 @@ class SignupResource(Resource):
                 email=email,
                 password=generate_password_hash(password, method='pbkdf2:sha256'),
                 first_name=first_name,
-                last_name=last_name
+                last_name=last_name,
+                profile_picture=profile_picture  # Set the profile_picture if provided
             )
             db.session.add(new_user)
             db.session.commit()
